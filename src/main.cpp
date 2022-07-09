@@ -22,6 +22,7 @@ void loop                      ();
 void rootPage                  ();
 void Zeit_Datum                ();
 void Zeit_Uhrzeit              ();
+void btc_kurs                  ();
 
 /////////////////////////////////////////////////////////////////////////// ZEIT
 void Zeit_Datum()
@@ -58,6 +59,71 @@ void rootPage() {
 }
 
 
+/////////////////////////////////////////////////////////////////////////// BTC Kurs 
+void btc_kurs(){
+
+   client->setInsecure();
+  HTTPClient https;
+
+  //if (https.begin(*client, "https://min-api.cryptocompare.com/data/pricemulti?fsyms=XRP&tsyms=ZAR&e=Luno&extraParams=your_app_name")) {  // HTTPS
+  if (https.begin(*client, "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC&tsyms=USD")) {  // HTTPS
+    int httpCode = https.GET();
+
+    // httpCode will be negative on error
+    if (httpCode > 0) {
+      // HTTP header has been send and Server response header has been handled
+      Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
+      Serial.println(httpCode);
+      // file found at server?
+      //if (httpCode == HTTP_CODE_OK) {
+      if (httpCode == 200) {
+        String payload = https.getString();
+
+        const size_t capacity = 2 * JSON_OBJECT_SIZE(1) + 10;
+        DynamicJsonDocument doc(capacity);
+
+        String json = payload;
+
+        //const char* json = "{\"XRP\":{\"ZAR\":4.20}}";
+
+        deserializeJson(doc, json);
+
+        String BTC_USD = doc["BTC"]["USD"]; 
+        
+        Serial.println("BTC Wert ausgeben");
+        /*
+      if (BTC_old_kurs < BTC_USD) {
+
+      tft.drawBitmap(0, 0, bitcoinLogo, 128, 64, GREEN);
+      tft.setCursor(24,78);
+      tft.setTextColor(GREEN,BLACK);
+      tft.setTextSize(2);
+      tft.print("$"+BTC_USD.substring(0, 5));
+
+      }
+      else
+      {
+      tft.drawBitmap(0, 0, bitcoinLogo, 128, 64, RED);
+      tft.setCursor(24,78);
+      tft.setTextColor(RED,BLACK);
+      tft.setTextSize(2);
+      tft.print("$"+BTC_USD.substring(0, 5));
+      }
+
+      BTC_old_kurs = BTC_USD;
+*/
+      }
+    } else {
+
+    }
+
+  } else {
+
+  }
+
+}
+
+
 /////////////////////////////////////////////////////////////////////////// Setup
 void setup() {
   Serial.begin(115200);
@@ -89,9 +155,8 @@ void loop() {
   // Wifi Portal starten
   Portal.handleClient();
 
-delay(2500);
-  Zeit_Datum();
-  Zeit_Uhrzeit();
-
+delay(80000);
+ 
+btc_kurs();
 
 }
