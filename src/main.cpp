@@ -78,6 +78,9 @@ void loop() {
   // Wifi Portal starten
   Portal.handleClient();
 
+
+  
+
 delay(5000);
  
 btc_kurs();
