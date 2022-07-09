@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoOTA.h>
 #include <WiFi.h>
 #include <WebServer.h>
 #include <time.h>
@@ -17,8 +18,6 @@ AutoConnect       Portal(Server);
 AutoConnectConfig Config;       // Enable autoReconnect supported on v0.9.4
 
 
-
-
 /////////////////////////////////////////////////////////////////////////// Funktionsprototypen
 //void callback                (char*, byte*, unsigned int);
 void loop                      ();
@@ -28,6 +27,12 @@ void Zeit_Uhrzeit              ();
 void btc_kurs                  ();
 
 
+/////////////////////////////////////////////////////////////////////////// Intervall der Steuerung
+unsigned long startSCHLEIFE_btckurs = 0;
+unsigned long intervSCHLEIFE_btckurs = 10000; 
+
+unsigned long startSCHLEIFE_zeit = 0;
+unsigned long intervSCHLEIFE_zeit = 2500; 
 
 
 /////////////////////////////////////////////////////////////////////////// WiFi Root Page 
@@ -46,11 +51,15 @@ void rootPage() {
   Server.send(200, "text/html", content);
 }
 
-
 /////////////////////////////////////////////////////////////////////////// Setup
 void setup() {
   Serial.begin(115200);
   Serial.println();
+
+ //OTA Setup für Firmware
+  ArduinoOTA.setHostname("24KanalRelaisWohnzimmer");
+  ArduinoOTA.setPassword("7n6WkRpZtxtkykyMUx329");
+  ArduinoOTA.begin();  
 
   // Enable saved past credential by autoReconnect option,
   // even once it is disconnected.
@@ -78,13 +87,22 @@ void loop() {
   // Wifi Portal starten
   Portal.handleClient();
 
+  // OTA Handle starten
+  ArduinoOTA.handle();  
 
-  
+      ///////////////////////////////////////////////////////////////////////// BTC Kurs abfragen
+      if (millis() - startSCHLEIFE_btckurs > intervSCHLEIFE_btckurs) {
+          startSCHLEIFE_btckurs = millis();   // aktuelle Zeit abspeichern
+          // BTC Kurs abfragen
+          btc_kurs();
+        }
 
-delay(5000);
- 
-btc_kurs();
+      ///////////////////////////////////////////////////////////////////////// ZEIT abfragen
+      if (millis() - startSCHLEIFE_zeit > intervSCHLEIFE_zeit) {
+          startSCHLEIFE_zeit = millis();   // aktuelle Zeit abspeichern
+          // BTC Kurs abfragen
+          Zeit_Datum();
+        }
 
-Zeit_Datum();
 
 }
