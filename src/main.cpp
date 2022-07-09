@@ -10,6 +10,38 @@ WebServer Server;
 AutoConnect       Portal(Server);
 AutoConnectConfig Config;       // Enable autoReconnect supported on v0.9.4
 
+
+// Setup für Uhr
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 3600;
+const int   daylightOffset_sec = 3600;
+
+/////////////////////////////////////////////////////////////////////////// Funktionsprototypen
+//void callback                (char*, byte*, unsigned int);
+void loop                      ();
+void rootPage                  ();
+void Zeit_Datum                ();
+void Zeit_Uhrzeit              ();
+
+/////////////////////////////////////////////////////////////////////////// ZEIT
+void Zeit_Datum()
+{
+  tm local;
+  getLocalTime(&local);
+  
+  Serial.println(&local, "%d.%m.%y");
+}
+
+void Zeit_Uhrzeit()
+{
+  tm local;
+  getLocalTime(&local);
+  
+  Serial.println(&local, "%H:%M");
+}
+
+
+/////////////////////////////////////////////////////////////////////////// WiFi Root Page 
 void rootPage() {
   String  content =
     "<html>"
@@ -17,7 +49,7 @@ void rootPage() {
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
     "</head>"
     "<body>"
-    "<h2 align=\"center\" style=\"color:blue;margin:20px;\">Hallo Welt</h2>"
+    "<h2 align=\"center\" style=\"color:blue;margin:20px;\">Bitcoin Ticker</h2>"
     "<p style=\"text-align:center;\">esp32 Wifi Autoconnect</p>"
     "<p></p><p style=\"padding-top:15px;text-align:center\">" AUTOCONNECT_LINK(COG_24) "</p>"
     "</body>"
@@ -25,18 +57,17 @@ void rootPage() {
   Server.send(200, "text/html", content);
 }
 
+
+/////////////////////////////////////////////////////////////////////////// Setup
 void setup() {
-  delay(1000);
   Serial.begin(115200);
   Serial.println();
-
 
   // Enable saved past credential by autoReconnect option,
   // even once it is disconnected.
   Config.autoReconnect = true;
   Config.hostName = "esp32-01";
   Portal.config(Config);
-
 
   // Behavior a root path of ESP8266WebServer.
   Server.on("/", rootPage);
@@ -46,11 +77,21 @@ void setup() {
   if (Portal.begin()) {
     Serial.println("WiFi connected: " + WiFi.localIP().toString());
     Serial.println(WiFi.getHostname());
-
   }
+
+  // ntp Server init
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
 }
 
+/////////////////////////////////////////////////////////////////////////// Loop
 void loop() {
+  // Wifi Portal starten
   Portal.handleClient();
+
+delay(2500);
+  Zeit_Datum();
+  Zeit_Uhrzeit();
+
+
 }
